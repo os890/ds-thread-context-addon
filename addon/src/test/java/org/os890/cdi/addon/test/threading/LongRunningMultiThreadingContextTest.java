@@ -19,8 +19,11 @@
 package org.os890.cdi.addon.test.threading;
 
 import org.apache.deltaspike.testcontrol.api.junit.CdiTestRunner;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.os890.cdi.addon.api.scope.thread.control.ManualThreadContextManager;
 import org.os890.cdi.addon.test.EntryPoint;
 
 import javax.inject.Inject;
@@ -44,6 +47,19 @@ public class LongRunningMultiThreadingContextTest {
 
     @Inject
     private EntryPoint entryPoint;
+
+    @Inject
+    private ManualThreadContextManager manualThreadContextManager;
+
+    @Before
+    public void onBefore() {
+        manualThreadContextManager.start();
+    }
+
+    @After
+    public void onAfter() {
+        manualThreadContextManager.stop();
+    }
 
     @Test
     public void longRunningMultiThread() {

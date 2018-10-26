@@ -18,13 +18,15 @@
  */
 package org.os890.cdi.addon.test;
 
-import org.os890.cdi.addon.api.scope.thread.ThreadScoped;
+import org.os890.cdi.addon.api.scope.thread.control.ThreadContextStarter;
 
+import javax.enterprise.context.Dependent;
 import java.util.concurrent.Callable;
 
 import static org.apache.deltaspike.core.util.ExceptionUtils.throwAsRuntimeException;
 
-@ThreadScoped
+@Dependent
+@ThreadContextStarter
 public class EntryPoint {
     public void run(Runnable runnable) {
         runnable.run();

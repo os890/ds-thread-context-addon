@@ -19,8 +19,11 @@
 package org.os890.cdi.addon.test.lifecycle;
 
 import org.apache.deltaspike.testcontrol.api.junit.CdiTestRunner;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.os890.cdi.addon.api.scope.thread.control.ManualThreadContextManager;
 import org.os890.cdi.addon.test.EntryPoint;
 
 import javax.inject.Inject;
@@ -34,18 +37,16 @@ public class ThreadContextLifecycleCallbackTest {
     private PreDestroyTestBean preDestroyTestBean;
 
     @Inject
-    private EntryPoint entryPoint;
+    private ManualThreadContextManager manualThreadContextManager;
 
     @Test
     public void beanLifecycle() {
+        manualThreadContextManager.start();
         assertEquals(NO_BEAN_CREATED, PreDestroyTestBean.getConstructionState()); //ATTENTION: this line fails IF you debug it and put a break-point here because IDEs call #toString which triggers the bean-creation
-        assertEquals(42, preDestroyTestBean.getValue());
-        assertEquals(BEAN_DESTROYED, PreDestroyTestBean.getConstructionState());
 
-        entryPoint.run(() -> {
-            assertEquals(42, preDestroyTestBean.getValue());
-            assertEquals(BEAN_CREATED, PreDestroyTestBean.getConstructionState());
-        });
+        assertEquals(42, preDestroyTestBean.getValue());
+        assertEquals(BEAN_CREATED, PreDestroyTestBean.getConstructionState());
+        manualThreadContextManager.stop();
         assertEquals(BEAN_DESTROYED, PreDestroyTestBean.getConstructionState());
     }
 }

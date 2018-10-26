@@ -18,20 +18,8 @@
  */
 package org.os890.cdi.addon.api.scope.thread.control;
 
-/**
- * use enter/leave manually if you have 1-n listeners which are called outside of the callstack of the "main operation"
- * e.g.:
- * #1 call 0-n onBefore listeners
- * #2 call (main-) actions
- * #3 call onAfter on the same listeners or onStop on something like a cleanup/finish listener
- * <p>
- * you mainly need it if there isn't an entry-point which triggers all actions as "nested" calls
- * see e.g. ManualThreadContextControlTest
- */
 public interface ManualThreadContextManager {
-    void enter();
-
-    void leave();
+    void start();
 
     void stop();
 }

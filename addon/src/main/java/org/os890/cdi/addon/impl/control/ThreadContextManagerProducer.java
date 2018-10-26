@@ -16,20 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.os890.cdi.addon.impl.control.manual;
+package org.os890.cdi.addon.impl.control;
 
-import org.os890.cdi.addon.api.scope.thread.ThreadScoped;
 import org.os890.cdi.addon.api.scope.thread.control.ManualThreadContextManager;
+import org.os890.cdi.addon.impl.context.ThreadContextExtension;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
-import javax.enterprise.inject.spi.BeanManager;
+import javax.inject.Inject;
 
 @ApplicationScoped
 public class ThreadContextManagerProducer {
+    @Inject
+    private ThreadContextExtension extension;
+
     @Produces
     @ApplicationScoped
-    protected ManualThreadContextManager manualThreadContextManager(BeanManager beanManager) {
-        return ((ManualThreadContextManager) beanManager.getContext(ThreadScoped.class));
+    protected ManualThreadContextManager manualThreadContextManager() {
+        return extension.getThreadContext();
     }
 }

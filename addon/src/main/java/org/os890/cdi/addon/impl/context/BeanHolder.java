@@ -28,14 +28,13 @@ import static java.util.Optional.ofNullable;
 public class BeanHolder {
     private static ThreadLocal<ContextualStorage> storageThreadLocal = new ThreadLocal<>();
 
-    public ContextualStorage getContextualStorage(BeanManager beanManager, boolean createIfNotExist, boolean passivationCapable) {
-        ContextualStorage contextualStorage = storageThreadLocal.get();
+    public ContextualStorage getContextualStorage() {
+        return storageThreadLocal.get();
+    }
 
-        if (contextualStorage == null && createIfNotExist) {
-            contextualStorage = new ContextualStorage(beanManager, false /*since it's stored in a ThreadLocal*/, passivationCapable);
-            storageThreadLocal.set(contextualStorage);
-        }
-        return contextualStorage;
+    public void init(BeanManager beanManager, boolean passivationCapable) {
+        ContextualStorage contextualStorage = new ContextualStorage(beanManager, false /*since it's stored in a ThreadLocal*/, passivationCapable);
+        storageThreadLocal.set(contextualStorage);
     }
 
     public void destroyBeans() {

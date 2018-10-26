@@ -21,11 +21,9 @@ package org.os890.cdi.addon.test.context;
 import org.apache.deltaspike.testcontrol.api.junit.CdiTestRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.os890.cdi.addon.api.scope.ResetAware;
-import org.os890.cdi.addon.api.scope.thread.ThreadScoped;
+import org.os890.cdi.addon.api.scope.thread.control.ManualThreadContextManager;
 import org.os890.cdi.addon.test.EntryPoint;
 
-import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -38,14 +36,16 @@ public class SimpleThreadContextTest {
     private TestBean testBean;
 
     @Inject
-    private BeanManager beanManager;
+    private EntryPoint entryPoint;
 
     @Inject
-    private EntryPoint entryPoint;
+    private ManualThreadContextManager threadContextManager;
 
     @Test
     public void proxyOfInjectionPoint() {
+        threadContextManager.start();
         assertThat(System.identityHashCode(testBean), is(not(testBean.getIdentityHashCode())));
+        threadContextManager.stop();
     }
 
     @Test
@@ -68,7 +68,8 @@ public class SimpleThreadContextTest {
             int value = testBean.getIdentityHashCode();
             assertThat(testBean.getIdentityHashCode(), is(value));
 
-            ((ResetAware) beanManager.getContext(ThreadScoped.class)).reset();
+            threadContextManager.stop();
+            threadContextManager.start();
 
             assertThat(testBean.getIdentityHashCode(), is(not(value)));
         });

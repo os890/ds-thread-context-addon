@@ -16,9 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.os890.cdi.addon.api.scope;
+package org.os890.cdi.addon.api.scope.thread.control;
 
-//separate interface to re-use it for other contexts as well
-public interface ResetAware {
-    void reset();
+import javax.interceptor.InterceptorBinding;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+@InterceptorBinding
+@Documented
+@Inherited
+
+@Retention(RUNTIME)
+@Target(TYPE)
+public @interface ThreadContextStarter {
 }
+
+

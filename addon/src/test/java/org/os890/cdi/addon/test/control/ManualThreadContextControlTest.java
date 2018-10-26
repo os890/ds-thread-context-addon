@@ -21,14 +21,17 @@ package org.os890.cdi.addon.test.control;
 import org.apache.deltaspike.testcontrol.api.junit.CdiTestRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.os890.cdi.addon.api.scope.thread.ThreadScoped;
 import org.os890.cdi.addon.api.scope.thread.control.ManualThreadContextManager;
 import org.os890.cdi.addon.test.EntryPoint;
 
+import javax.enterprise.context.ContextNotActiveException;
+import javax.enterprise.context.spi.Context;
+import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 @RunWith(CdiTestRunner.class)
 public class ManualThreadContextControlTest {
@@ -41,47 +44,53 @@ public class ManualThreadContextControlTest {
     @Inject
     private EntryPoint entryPoint;
 
+    @Inject
+    private BeanManager beanManager;
+
     @Test
-    public void autoVsManualControl() {
-        // #1
-        // accessing a @ThreadScoped bean multiple times >without manual control< just leads to the same instance if
-        // there is a different @ThreadScoped in the callstack above
-        // in this case the entryPoint bean is the outermost @ThreadScoped bean which closes the context at the end
+    public void accessViaEntryPoint() {
+        // nested access of a @ThreadScoped bean within a @ThreadContextStarter bean
         entryPoint.run(() -> {
             int value = testBean.getIdentityHashCode();
             assertThat(testBean.getIdentityHashCode(), is(value));
             return value;
         });
+    }
 
-        // #2
-        // -> no entry-point above -> each call leads to a new instance (because the outermost @ThreadScoped bean closes the context
-        // in this case both calls are on the "same level"
-        assertThat(testBean.getIdentityHashCode(), is(not(testBean.getIdentityHashCode())));
-
-        // #3
-        // calling #enter simulates an outermost entry-point
-        // any call to a @ThreadScoped will use the same context
-        manualThreadContextManager.enter();
-        assertThat(testBean.getIdentityHashCode(), is(testBean.getIdentityHashCode()));
-        manualThreadContextManager.leave();
-
-        // #4
-        // the previous #leave is an implicit #stop because "closes" the manuel #enter
-        // therefore the following calls are again on the "same level" (see #2)
-        assertThat(testBean.getIdentityHashCode(), is(not(testBean.getIdentityHashCode())));
-
-        // #5
-        // this cases simulates multiple listeners each calling #enter
-        // if there isn't the same amount of #leave calls (because they are just onBefore listeners),
-        // a #stop is needed in an "exit" listener (that allows different amount of before/after listeners)
-        manualThreadContextManager.enter();
-        manualThreadContextManager.enter();
+    @Test
+    public void manualControl() {
+        // manual control without @ThreadContextStarter
+        manualThreadContextManager.start();
         assertThat(testBean.getIdentityHashCode(), is(testBean.getIdentityHashCode()));
         manualThreadContextManager.stop();
 
-        // #6
-        // the previous #stop closed the context
-        // therefore the following calls are again on the "same level" (see #2)
-        assertThat(testBean.getIdentityHashCode(), is(not(testBean.getIdentityHashCode())));
+        // simulation of multiple listeners each calling #start
+        // if there isn't the same amount of #stop calls (because they are just onBefore listeners),
+        // a #stop is needed in an "exit" listener (that allows different amount of before/after listeners)
+        manualThreadContextManager.start();
+        manualThreadContextManager.start();
+        assertThat(testBean.getIdentityHashCode(), is(testBean.getIdentityHashCode()));
+        manualThreadContextManager.stop();
+    }
+
+    @Test(expected = ContextNotActiveException.class)
+    public void missingManualControl() {
+        testBean.getIdentityHashCode();
+    }
+
+    @Test(expected = ContextNotActiveException.class)
+    public void stoppedContext() {
+        try {
+            manualThreadContextManager.start();
+            Context context = beanManager.getContext(ThreadScoped.class);
+
+            assertThat(testBean.getIdentityHashCode(), is(testBean.getIdentityHashCode()));
+            manualThreadContextManager.stop();
+            assertFalse(context.isActive());
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+
+        assertFalse(beanManager.getContext(ThreadScoped.class).isActive());
     }
 }

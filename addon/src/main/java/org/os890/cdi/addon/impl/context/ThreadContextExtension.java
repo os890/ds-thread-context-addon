@@ -18,24 +18,20 @@
  */
 package org.os890.cdi.addon.impl.context;
 
-import org.apache.deltaspike.core.util.metadata.builder.AnnotatedTypeBuilder;
-import org.os890.cdi.addon.api.scope.thread.ThreadScoped;
-import org.os890.cdi.addon.impl.control.auto.AutoContextControlInterceptor;
-
 import javax.enterprise.event.Observes;
-import javax.enterprise.inject.spi.*;
+import javax.enterprise.inject.spi.AfterBeanDiscovery;
+import javax.enterprise.inject.spi.BeanManager;
+import javax.enterprise.inject.spi.Extension;
 
 public class ThreadContextExtension implements Extension {
-    protected <T> void addAutoContextControl(@Observes @WithAnnotations(ThreadScoped.class) ProcessAnnotatedType<T> pat) {
-        pat.setAnnotatedType(
-                new AnnotatedTypeBuilder<T>()
-                        .readFromType(pat.getAnnotatedType())
-                        .addToClass(AutoContextControlInterceptor.LITERAL)
-                        .create());
-    }
+    private ThreadContext threadContext;
 
     protected void registerContexts(@Observes AfterBeanDiscovery afterBeanDiscovery, BeanManager beanManager) {
-        ThreadContext threadContext = new ThreadContext(beanManager);
+        threadContext = new ThreadContext(beanManager);
         afterBeanDiscovery.addContext(threadContext);
+    }
+
+    public ThreadContext getThreadContext() {
+        return threadContext;
     }
 }

@@ -20,33 +20,27 @@ package org.os890.cdi.addon.impl.context;
 
 import org.apache.deltaspike.core.util.context.AbstractContext;
 import org.apache.deltaspike.core.util.context.ContextualStorage;
-import org.os890.cdi.addon.api.scope.ResetAware;
 import org.os890.cdi.addon.api.scope.thread.ThreadScoped;
 import org.os890.cdi.addon.api.scope.thread.control.ManualThreadContextManager;
-import org.os890.cdi.addon.impl.control.auto.DefaultAutoContextControlInterceptor;
 
 import javax.enterprise.context.spi.Contextual;
 import javax.enterprise.inject.spi.BeanManager;
 import java.lang.annotation.Annotation;
 
-public class ThreadContext extends AbstractContext implements ResetAware, ManualThreadContextManager {
-    //use:
-    //private static ThreadLocal<Boolean> ACTIVE = ThreadLocal.withInitial(() -> FALSE);
-    //+ ACTIVE.get() in #isActive to force explicit de-/activation (e.g. via an entry-point)
-    //however, it wouldn't allow that the entry-point itself is @ThreadScoped
-
+public class ThreadContext extends AbstractContext implements ManualThreadContextManager {
     private BeanHolder beanHolder = new BeanHolder();
 
     private BeanManager beanManager;
 
-    protected ThreadContext(BeanManager beanManager) {
+    ThreadContext(BeanManager beanManager) {
         super(beanManager);
         this.beanManager = beanManager;
     }
 
     @Override
     protected ContextualStorage getContextualStorage(Contextual<?> contextual, boolean createIfNotExist) {
-        return beanHolder.getContextualStorage(this.beanManager, createIfNotExist, isPassivatingScope());
+        //the parameters aren't needed because there is just one storage (for the current thread) which is initialized (or not)
+        return beanHolder.getContextualStorage();
     }
 
     @Override
@@ -56,33 +50,16 @@ public class ThreadContext extends AbstractContext implements ResetAware, Manual
 
     @Override
     public boolean isActive() {
-        return true; //for a more restrictive/explicit handling see the comment at the beginning...
+        return beanHolder.getContextualStorage() != null;
     }
 
     @Override
-    public void reset() {
-        beanHolder.destroyBeans();
-    }
-
-    /*
-     * for optional manual control
-     */
-
-    @Override
-    public void enter() {
-        DefaultAutoContextControlInterceptor.onManuelEnter();
-    }
-
-    @Override
-    public void leave() {
-        if (DefaultAutoContextControlInterceptor.onManuelLeave()) {
-            reset();
-        }
+    public void start() {
+        beanHolder.init(beanManager, isPassivatingScope());
     }
 
     @Override
     public void stop() {
-        DefaultAutoContextControlInterceptor.onManuelStop();
-        reset();
+        beanHolder.destroyBeans();
     }
 }
