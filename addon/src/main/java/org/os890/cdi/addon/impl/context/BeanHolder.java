@@ -16,18 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.cdi.addon.impl.context;
 
 import org.apache.deltaspike.core.util.context.AbstractContext;
 import org.apache.deltaspike.core.util.context.ContextualStorage;
 
-import javax.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.BeanManager;
 
 import static java.util.Optional.ofNullable;
 
+/**
+ * Holds the {@link ContextualStorage} for the current thread via a {@link ThreadLocal}.
+ * Provides creation and destruction of the per-thread bean storage.
+ */
 public class BeanHolder {
+
     private static ThreadLocal<ContextualStorage> storageThreadLocal = new ThreadLocal<>();
 
+    /**
+     * Returns the contextual storage for the current thread, creating it if requested.
+     *
+     * @param beanManager        the CDI bean manager
+     * @param createIfNotExist   if {@code true}, a new storage is created when absent
+     * @param passivationCapable whether the context supports passivation
+     * @return the current thread's contextual storage, or {@code null} if absent and not creating
+     */
     public ContextualStorage getContextualStorage(BeanManager beanManager, boolean createIfNotExist, boolean passivationCapable) {
         ContextualStorage contextualStorage = storageThreadLocal.get();
 
@@ -38,6 +52,9 @@ public class BeanHolder {
         return contextualStorage;
     }
 
+    /**
+     * Destroys all active beans in the current thread's storage and clears the {@link ThreadLocal}.
+     */
     public void destroyBeans() {
         try {
             ofNullable(storageThreadLocal.get()).ifPresent(AbstractContext::destroyAllActive);

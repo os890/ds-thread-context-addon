@@ -16,24 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.cdi.addon.test.context;
 
-import org.apache.deltaspike.testcontrol.api.junit.CdiTestRunner;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.inject.Inject;
+import org.junit.jupiter.api.Test;
+import org.os890.cdi.addon.dynamictestbean.EnableTestBeans;
 import org.os890.cdi.addon.api.scope.ResetAware;
 import org.os890.cdi.addon.api.scope.thread.ThreadScoped;
 import org.os890.cdi.addon.test.EntryPoint;
 
-import javax.enterprise.inject.spi.BeanManager;
-import javax.inject.Inject;
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
-@RunWith(CdiTestRunner.class)
+/**
+ * Tests verifying that the {@code @ThreadScoped} context correctly manages
+ * bean identity, cleanup on entry-point exit, and explicit context reset.
+ */
+@EnableTestBeans
 public class SimpleThreadContextTest {
+
     @Inject
     private TestBean testBean;
 
@@ -43,11 +47,13 @@ public class SimpleThreadContextTest {
     @Inject
     private EntryPoint entryPoint;
 
+    /** Verifies that the injected reference is a CDI proxy, not the contextual instance. */
     @Test
     public void proxyOfInjectionPoint() {
         assertThat(System.identityHashCode(testBean), is(not(testBean.getIdentityHashCode())));
     }
 
+    /** Verifies that the context is reset when the outermost entry-point exits. */
     @Test
     public void cleanupOnEntryPointExit() {
         int value1 = entryPoint.run(() -> {
@@ -62,6 +68,7 @@ public class SimpleThreadContextTest {
         });
     }
 
+    /** Verifies that an explicit {@code reset()} destroys and recreates beans. */
     @Test
     public void contextReset() {
         entryPoint.run(() -> {

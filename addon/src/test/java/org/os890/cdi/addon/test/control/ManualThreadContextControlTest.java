@@ -16,22 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.cdi.addon.test.control;
 
-import org.apache.deltaspike.testcontrol.api.junit.CdiTestRunner;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import jakarta.inject.Inject;
+import org.junit.jupiter.api.Test;
+import org.os890.cdi.addon.dynamictestbean.EnableTestBeans;
 import org.os890.cdi.addon.api.scope.thread.control.ManualThreadContextManager;
 import org.os890.cdi.addon.test.EntryPoint;
 
-import javax.inject.Inject;
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
-@RunWith(CdiTestRunner.class)
+/**
+ * Tests verifying manual thread-context control via {@link ManualThreadContextManager},
+ * including enter/leave nesting and force-stop behavior.
+ */
+@EnableTestBeans
 public class ManualThreadContextControlTest {
+
     @Inject
     private TestBean testBean;
 
@@ -41,6 +45,7 @@ public class ManualThreadContextControlTest {
     @Inject
     private EntryPoint entryPoint;
 
+    /** Exercises automatic vs. manual context control, nested enter/leave, and force-stop. */
     @Test
     public void autoVsManualControl() {
         // #1

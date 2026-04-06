@@ -16,26 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.cdi.addon.test.lifecycle;
 
-import org.apache.deltaspike.testcontrol.api.junit.CdiTestRunner;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import jakarta.inject.Inject;
+import org.junit.jupiter.api.Test;
+import org.os890.cdi.addon.dynamictestbean.EnableTestBeans;
 import org.os890.cdi.addon.test.EntryPoint;
 
-import javax.inject.Inject;
-
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.os890.cdi.addon.test.lifecycle.PreDestroyTestBean.State.*;
 
-@RunWith(CdiTestRunner.class)
+/**
+ * Tests verifying that {@code @PostConstruct} and {@code @PreDestroy} lifecycle callbacks
+ * are invoked correctly for {@code @ThreadScoped} beans.
+ */
+@EnableTestBeans
 public class ThreadContextLifecycleCallbackTest {
+
     @Inject
     private PreDestroyTestBean preDestroyTestBean;
 
     @Inject
     private EntryPoint entryPoint;
 
+    /** Verifies the full bean lifecycle: no-bean, post-construct, pre-destroy across context resets. */
     @Test
     public void beanLifecycle() {
         assertEquals(NO_BEAN_CREATED, PreDestroyTestBean.getConstructionState()); //ATTENTION: this line fails IF you debug it and put a break-point here because IDEs call #toString which triggers the bean-creation

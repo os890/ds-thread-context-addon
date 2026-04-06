@@ -16,10 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.cdi.addon.api.scope.thread.control;
 
 /**
- * use enter/leave manually if you have 1-n listeners which are called outside of the callstack of the "main operation"
+ * Use enter/leave manually if you have 1-n listeners which are called outside of the callstack of the "main operation".
  * e.g.:
  * #1 call 0-n onBefore listeners
  * #2 call (main-) actions
@@ -29,9 +30,19 @@ package org.os890.cdi.addon.api.scope.thread.control;
  * see e.g. ManualThreadContextControlTest
  */
 public interface ManualThreadContextManager {
+
+    /**
+     * Increments the nested-call counter, simulating an entry-point start.
+     */
     void enter();
 
+    /**
+     * Decrements the nested-call counter; resets the context when the counter reaches zero.
+     */
     void leave();
 
+    /**
+     * Forces the nested-call counter to zero and resets the context immediately.
+     */
     void stop();
 }

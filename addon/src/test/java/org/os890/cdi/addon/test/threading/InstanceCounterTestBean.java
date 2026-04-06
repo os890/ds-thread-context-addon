@@ -16,28 +16,36 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.cdi.addon.test.threading;
 
 import org.os890.cdi.addon.api.scope.thread.ThreadScoped;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.System.identityHashCode;
 import static org.apache.deltaspike.core.util.ExceptionUtils.throwAsRuntimeException;
 
+/**
+ * A {@code @ThreadScoped} bean that assigns a unique, monotonically-increasing instance ID
+ * on construction and simulates a slow pre-destroy callback for concurrency testing.
+ */
 @ThreadScoped
 public class InstanceCounterTestBean {
+
     private static final AtomicInteger counter = new AtomicInteger(0);
 
     private int instanceId;
 
+    /** Assigns a unique instance ID from the global counter on post-construct. */
     @PostConstruct
     protected void init() {
         this.instanceId = counter.incrementAndGet();
     }
 
+    /** Simulates a slow cleanup by sleeping for 400 ms. */
     @PreDestroy
     protected void cleanup() {
         try {
@@ -47,10 +55,20 @@ public class InstanceCounterTestBean {
         }
     }
 
+    /**
+     * Returns the unique instance ID assigned at construction time.
+     *
+     * @return the instance ID
+     */
     public int getInstanceId() {
         return instanceId;
     }
 
+    /**
+     * Returns the identity hash code of the actual bean instance (not the proxy).
+     *
+     * @return the identity hash code
+     */
     public int getIdentityHashCode() {
         return identityHashCode(this);
     }

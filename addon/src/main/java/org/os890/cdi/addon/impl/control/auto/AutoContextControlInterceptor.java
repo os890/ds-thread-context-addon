@@ -16,10 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.cdi.addon.impl.control.auto;
 
-import javax.enterprise.util.AnnotationLiteral;
-import javax.interceptor.InterceptorBinding;
+import jakarta.enterprise.util.AnnotationLiteral;
+import jakarta.interceptor.InterceptorBinding;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
@@ -28,6 +29,10 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+/**
+ * Interceptor binding that triggers automatic {@code @ThreadScoped} context cleanup
+ * when the outermost annotated method exits.
+ */
 @InterceptorBinding
 @Documented
 @Inherited
@@ -35,11 +40,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 @Target(TYPE)
 public @interface AutoContextControlInterceptor {
+
+    /** Annotation literal for programmatic use in CDI extensions. */
     Literal LITERAL = new Literal();
 
+    /**
+     * Annotation literal implementation for {@link AutoContextControlInterceptor}.
+     */
     class Literal extends AnnotationLiteral<AutoContextControlInterceptor> implements AutoContextControlInterceptor {
         private static final long serialVersionUID = 1189092542638784524L;
     }
 }
-
-

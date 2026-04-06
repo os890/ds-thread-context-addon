@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.cdi.addon.impl.context;
 
 import org.apache.deltaspike.core.util.context.AbstractContext;
@@ -25,10 +26,15 @@ import org.os890.cdi.addon.api.scope.thread.ThreadScoped;
 import org.os890.cdi.addon.api.scope.thread.control.ManualThreadContextManager;
 import org.os890.cdi.addon.impl.control.auto.DefaultAutoContextControlInterceptor;
 
-import javax.enterprise.context.spi.Contextual;
-import javax.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.context.spi.Contextual;
+import jakarta.enterprise.inject.spi.BeanManager;
 import java.lang.annotation.Annotation;
 
+/**
+ * CDI context implementation for the {@link ThreadScoped} scope.
+ * Stores beans in a {@link BeanHolder} backed by {@link ThreadLocal} and
+ * implements both {@link ResetAware} and {@link ManualThreadContextManager}.
+ */
 public class ThreadContext extends AbstractContext implements ResetAware, ManualThreadContextManager {
     //use:
     //private static ThreadLocal<Boolean> ACTIVE = ThreadLocal.withInitial(() -> FALSE);
@@ -39,6 +45,11 @@ public class ThreadContext extends AbstractContext implements ResetAware, Manual
 
     private BeanManager beanManager;
 
+    /**
+     * Creates a new {@code ThreadContext} backed by the given bean manager.
+     *
+     * @param beanManager the CDI bean manager
+     */
     protected ThreadContext(BeanManager beanManager) {
         super(beanManager);
         this.beanManager = beanManager;
@@ -49,16 +60,26 @@ public class ThreadContext extends AbstractContext implements ResetAware, Manual
         return beanHolder.getContextualStorage(this.beanManager, createIfNotExist, isPassivatingScope());
     }
 
+    /** {@inheritDoc} */
     @Override
     public Class<? extends Annotation> getScope() {
         return ThreadScoped.class;
     }
 
+    /**
+     * Returns {@code true} unconditionally because this context is always active.
+     *
+     * @return {@code true}
+     */
     @Override
     public boolean isActive() {
         return true; //for a more restrictive/explicit handling see the comment at the beginning...
     }
 
+    /**
+     * Destroys all beans held in the current thread's contextual storage,
+     * invoking their {@code @PreDestroy} callbacks.
+     */
     @Override
     public void reset() {
         beanHolder.destroyBeans();
@@ -68,11 +89,19 @@ public class ThreadContext extends AbstractContext implements ResetAware, Manual
      * for optional manual control
      */
 
+    /**
+     * Simulates entering an entry-point by incrementing the nesting counter.
+     * While the counter is above zero, the context will not be reset on method exit.
+     */
     @Override
     public void enter() {
         DefaultAutoContextControlInterceptor.onManuelEnter();
     }
 
+    /**
+     * Simulates leaving an entry-point by decrementing the nesting counter.
+     * If the outermost level is reached (counter hits zero), the context is reset.
+     */
     @Override
     public void leave() {
         if (DefaultAutoContextControlInterceptor.onManuelLeave()) {
@@ -80,6 +109,10 @@ public class ThreadContext extends AbstractContext implements ResetAware, Manual
         }
     }
 
+    /**
+     * Force-stops the context by resetting the nesting counter to zero and
+     * destroying all thread-scoped beans.
+     */
     @Override
     public void stop() {
         DefaultAutoContextControlInterceptor.onManuelStop();

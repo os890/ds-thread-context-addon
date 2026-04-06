@@ -16,17 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.cdi.addon.impl.control.manual;
 
 import org.os890.cdi.addon.api.scope.thread.ThreadScoped;
 import org.os890.cdi.addon.api.scope.thread.control.ManualThreadContextManager;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
-import javax.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.enterprise.inject.spi.BeanManager;
 
+/**
+ * CDI producer that exposes the {@link ManualThreadContextManager} from the registered
+ * {@link ThreadScoped} context as an injectable application-scoped bean.
+ */
 @ApplicationScoped
 public class ThreadContextManagerProducer {
+
+    /**
+     * Produces the {@link ManualThreadContextManager} by resolving it from the active
+     * {@link ThreadScoped} context via the bean manager.
+     *
+     * @param beanManager the CDI bean manager
+     * @return the manual thread context manager
+     */
     @Produces
     @ApplicationScoped
     protected ManualThreadContextManager manualThreadContextManager(BeanManager beanManager) {

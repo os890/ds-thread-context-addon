@@ -16,26 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.cdi.addon.impl.control.auto;
 
 import org.os890.cdi.addon.api.scope.ResetAware;
 import org.os890.cdi.addon.api.scope.thread.ThreadScoped;
 
-import javax.annotation.Priority;
-import javax.enterprise.inject.spi.BeanManager;
-import javax.inject.Inject;
-import javax.interceptor.AroundInvoke;
-import javax.interceptor.Interceptor;
-import javax.interceptor.InvocationContext;
+import jakarta.annotation.Priority;
+import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.inject.Inject;
+import jakarta.interceptor.AroundInvoke;
+import jakarta.interceptor.Interceptor;
+import jakarta.interceptor.InvocationContext;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static javax.interceptor.Interceptor.Priority.LIBRARY_BEFORE;
+import static jakarta.interceptor.Interceptor.Priority.LIBRARY_BEFORE;
 
+/**
+ * CDI interceptor that tracks nested {@code @ThreadScoped} entry-points via a counter
+ * and resets the thread context when the outermost call exits.
+ */
+// CDI proxies handle serialization of injected dependencies transparently,
+// so the non-transient @Inject field is safe in this Serializable interceptor.
+@SuppressWarnings("serial")
 @Priority(LIBRARY_BEFORE)
 @AutoContextControlInterceptor
 @Interceptor
 public class DefaultAutoContextControlInterceptor implements Serializable {
+
     private static final long serialVersionUID = 1189092542638784524L;
 
     private static ThreadLocal<AtomicInteger> nestedCallDetection = ThreadLocal.withInitial(() -> new AtomicInteger(0));
@@ -43,6 +52,14 @@ public class DefaultAutoContextControlInterceptor implements Serializable {
     @Inject
     private BeanManager beanManager;
 
+    /**
+     * Intercepts method invocations on {@code @ThreadScoped} beans.
+     * Increments the nesting counter on entry and resets the context when the outermost call exits.
+     *
+     * @param invocationContext the CDI invocation context
+     * @return the result of the intercepted method
+     * @throws Exception if the intercepted method throws
+     */
     @AroundInvoke
     public Object execute(InvocationContext invocationContext) throws Exception {
         try {
@@ -58,14 +75,25 @@ public class DefaultAutoContextControlInterceptor implements Serializable {
         }
     }
 
+    /**
+     * Called by manual control to simulate entering an entry-point.
+     */
     public static void onManuelEnter() {
         nestedCallDetection.get().incrementAndGet();
     }
 
+    /**
+     * Called by manual control to simulate leaving an entry-point.
+     *
+     * @return {@code true} if the outermost level was reached (counter hit zero)
+     */
     public static boolean onManuelLeave() {
         return nestedCallDetection.get().decrementAndGet() == 0;
     }
 
+    /**
+     * Called by manual control to force-stop the context and reset the counter to zero.
+     */
     public static void onManuelStop() {
         nestedCallDetection.set(new AtomicInteger(0));
     }

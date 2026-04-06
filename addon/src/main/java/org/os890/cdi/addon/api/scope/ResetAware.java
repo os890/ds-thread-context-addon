@@ -16,9 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.cdi.addon.api.scope;
 
+/**
+ * Marker interface for context implementations that support explicit reset.
+ * Separate interface to allow re-use across different custom CDI contexts.
+ */
 //separate interface to re-use it for other contexts as well
 public interface ResetAware {
+
+    /**
+     * Destroys all active beans in the current context and clears context storage.
+     */
     void reset();
 }

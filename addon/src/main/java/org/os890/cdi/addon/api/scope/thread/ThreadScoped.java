@@ -16,9 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.cdi.addon.api.scope.thread;
 
-import javax.enterprise.context.NormalScope;
+import jakarta.enterprise.context.NormalScope;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
@@ -27,6 +28,11 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+/**
+ * CDI normal scope annotation for thread-scoped beans.
+ * Beans annotated with {@code @ThreadScoped} are created once per thread entry-point
+ * and destroyed automatically when the outermost entry-point method exits.
+ */
 @NormalScope
 @Inherited
 @Documented

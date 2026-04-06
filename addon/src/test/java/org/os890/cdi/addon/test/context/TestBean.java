@@ -16,14 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.cdi.addon.test.context;
 
 import org.os890.cdi.addon.api.scope.thread.ThreadScoped;
 
 import static java.lang.System.identityHashCode;
 
+/**
+ * A simple {@code @ThreadScoped} bean used in context tests to verify
+ * identity-based instance tracking across thread-context resets.
+ */
 @ThreadScoped
 public class TestBean {
+
+    /**
+     * Returns the identity hash code of the actual bean instance (not the proxy).
+     *
+     * @return the identity hash code
+     */
     public int getIdentityHashCode() {
         return identityHashCode(this);
     }

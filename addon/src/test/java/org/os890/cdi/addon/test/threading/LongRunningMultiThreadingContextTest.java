@@ -16,14 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.cdi.addon.test.threading;
 
-import org.apache.deltaspike.testcontrol.api.junit.CdiTestRunner;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import jakarta.inject.Inject;
+import org.junit.jupiter.api.Test;
+import org.os890.cdi.addon.dynamictestbean.EnableTestBeans;
 import org.os890.cdi.addon.test.EntryPoint;
 
-import javax.inject.Inject;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -32,11 +32,16 @@ import static java.util.Arrays.asList;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.stream.Collectors.toList;
 import static org.apache.deltaspike.core.util.ExceptionUtils.throwAsRuntimeException;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@RunWith(CdiTestRunner.class)
+/**
+ * Concurrency test verifying that {@code @ThreadScoped} beans are correctly isolated
+ * across multiple threads with slow pre-destroy callbacks.
+ */
+@EnableTestBeans
 public class LongRunningMultiThreadingContextTest {
+
     private ExecutorService executor = newFixedThreadPool(3);
 
     @Inject
@@ -45,6 +50,7 @@ public class LongRunningMultiThreadingContextTest {
     @Inject
     private EntryPoint entryPoint;
 
+    /** Submits 10 tasks across 3 threads and verifies each gets a unique bean instance ID. */
     @Test
     public void longRunningMultiThread() {
         CopyOnWriteArrayList<Future<Integer>> results = new CopyOnWriteArrayList<>();
